@@ -36,16 +36,18 @@ class ImageUploadsController < ApplicationController
     end
 
     links = uploaders.map(&:url)
-    image_path = nil;
 
     begin
       links.each do |link|
-        uri = Addressable::URI.parse(link);
-        image_path = Rails.public_path.to_s + uri.path.to_s;
-        Nsfw.unsafe?(image_path)
+        uri = Addressable::URI.parse(link)
+        Nsfw.unsafe?(Rails.public_path.to_s + uri.path.to_s)
       end
     rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
-      File.delete(image_path) if File.exist?(image_path)
+      links.each do |link|
+        uri = Addressable::URI.parse(link)
+        image_path = Rails.public_path.to_s + uri.path.to_s
+        File.delete(image_path) if File.exist?(image_path)
+      end
 
       respond_to do |format|
         format.json do
