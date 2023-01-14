@@ -5,6 +5,7 @@ class Article < ApplicationRecord
   include Taggable
   include UserSubscriptionSourceable
   include PgSearch::Model
+  include Nsfwimage
 
   acts_as_taggable_on :tags
   resourcify
@@ -171,11 +172,14 @@ class Article < ApplicationRecord
   validate :validate_co_authors_must_not_be_the_same, unless: -> { co_author_ids.blank? }
   validate :validate_co_authors_exist, unless: -> { co_author_ids.blank? }
 
+  before_validation :evaluate_nsfw_markdown
   before_validation :evaluate_markdown, :create_slug, :set_published_date
   before_validation :remove_prohibited_unicode_characters
   before_validation :normalize_title
-  before_validation :validate_nsfw_image_list
-  before_validation :validate_nsfw_body
+  before_validation :evaluate_nsfw_image_list
+  before_validation :set_nsfw
+  before_validation :add_nsfw_class_cover
+  before_validation :add_nsfw_class_body
   before_validation :add_nsfw_tag
   before_save :set_cached_entities
   before_save :set_all_dates
@@ -1076,78 +1080,5 @@ Images::Optimizer.call(social_image, resize: { width: 180, height: 180, resizing
 
     Users::RecordFieldTestEventWorker
       .perform_async(user_id, AbExperiment::GoalConversionHandler::USER_PUBLISHES_POST_GOAL)
-  end
-
-  def validate_nsfw_image_list
-    self.nsfw = false
-
-    if image_list == "" || image_list.nil?
-      return
-    end
-
-    begin
-      image_list.split(",").each do |image|
-        uri = Addressable::URI.parse(image)
-        if Nsfw.unsafe?(Rails.public_path.to_s + uri.path.to_s)
-          self.nsfw = true
-        end
-      end
-    rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
-      errors.add(:base, ErrorMessages::Clean.call("Your post contains sensitive images!!!"))
-    end
-  end
-
-  def validate_nsfw_body
-    self.nsfw = false
-
-    doc = Nokogiri::HTML(processed_html)
-    doc.xpath("//img").each do |img|
-      if img["src"].match(/#{URL.domain}/i) || img["src"].start_with?("/")
-        uri = Addressable::URI.parse(img["src"])
-        image_path = Rails.public_path.to_s + uri.path.to_s
-      else
-        tempfile = Down.download(img["src"], max_redirects: 3)
-        next unless File.exist?(tempfile.path)
-
-        image_path = tempfile.path
-      end
-
-      begin
-        if Nsfw.unsafe?(image_path)
-          self.nsfw = true
-          img.append_class("nsfw-content")
-        end
-      rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
-        if main_image.include? img["src"]
-          self.main_image = ""
-        end
-
-        if img.parent.name == "a"
-          img.parent.remove
-        else
-          img.remove
-        end
-
-        self.body_markdown = body_markdown.gsub(/(!)(\[.*\])\(#{img['src']}\)/i, "")
-
-        File.delete(image_path) if File.exist?(image_path)
-      end
-    end
-
-    self.processed_html = doc.to_html
-  end
-
-  def add_nsfw_tag
-    unless nsfw
-      return
-    end
-
-    return if tag_list.include? "nsfw"
-
-    if tag_list.size >= MAX_TAG_LIST_SIZE
-      tag_list.remove(tag_list[tag_list.size - 1], parse: true)
-    end
-
-    tag_list.add("nsfw", parse: true)
   end
 end

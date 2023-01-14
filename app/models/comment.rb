@@ -1,4 +1,6 @@
 class Comment < ApplicationRecord
+  include Nsfwimage
+
   has_ancestry
   resourcify
 
@@ -31,8 +33,9 @@ class Comment < ApplicationRecord
   has_many :mentions, as: :mentionable, inverse_of: :mentionable, dependent: :destroy
   has_many :notifications, as: :notifiable, inverse_of: :notifiable, dependent: :delete_all
   has_many :notification_subscriptions, as: :notifiable, inverse_of: :notifiable, dependent: :destroy
+  before_validation :evaluate_nsfw_markdown
   before_validation :evaluate_markdown, if: -> { body_markdown }
-  before_validation :validate_nsfw_body
+  before_validation :add_nsfw_class_body
   before_save :set_markdown_character_count, if: :body_markdown
   before_save :synchronous_spam_score_check
   before_create :adjust_comment_parent_based_on_depth
@@ -395,36 +398,5 @@ class Comment < ApplicationRecord
 
   def parent_exists?
     parent_id && Comment.exists?(id: parent_id)
-  end
-
-  def validate_nsfw_body
-    doc = Nokogiri::HTML(processed_html)
-    doc.xpath("//img").each do |img|
-      if img["src"].match(/#{URL.domain}/i) || img["src"].start_with?("/")
-        uri = Addressable::URI.parse(img["src"])
-        image_path = Rails.public_path.to_s + uri.path.to_s
-      else
-        tempfile = Down.download(img["src"], max_redirects: 3)
-        next unless File.exist?(tempfile.path)
-
-        image_path = tempfile.path
-      end
-
-      begin
-        img.append_class("nsfw-content") if Nsfw.unsafe?(image_path)
-      rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
-        if img.parent.name == "a"
-          img.parent.remove
-        else
-          img.remove
-        end
-
-        self.body_markdown = body_markdown.gsub(/(!)(\[.*\])\(#{img['src']}\)/i, "")
-
-        File.delete(image_path) if File.exist?(image_path)
-      end
-    end
-
-    self.processed_html = doc.to_html
   end
 end

@@ -19,7 +19,7 @@ module Nsfw
 
   def self.safe?(image_path)
     if !File.file?(image_path)
-      raise Exception.new "Image file does not exists"
+      raise Exception.new "Image file does not exists: " + image_path
     end
 
     predictions = NSFW::Image.predictions(image_path)
