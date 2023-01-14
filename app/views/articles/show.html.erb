@@ -268,36 +268,7 @@
 <script>
 onReady = () => {
   QSFBEmbedParse(1000);
-
-  var nsfwImages = document.querySelectorAll('.nsfw-content');
-  for (let nsfwImage of nsfwImages) {
-    a = nsfwImage.parentElement;
-    
-    if (a.tagName != 'A') {
-      continue
-    }
-
-    if (a.dataset.href) {
-      continue
-    }
-
-    a.dataset.href = a.href;
-    a.setAttribute("href","javascript:void(0);");
-  }
-
-  document.addEventListener('click', (e) => {
-    target = e.target;
-    parent = e.target.parentElement;
-
-    let isNsfw = target.classList.contains('nsfw-content');
-    if (isNsfw) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      target.classList.remove('nsfw-content');
-      parent.setAttribute("href", parent.dataset.href);
-    }
-  });
+  nsfwParse();
 }
 
 document.addEventListener('DOMContentLoaded', onReady);
