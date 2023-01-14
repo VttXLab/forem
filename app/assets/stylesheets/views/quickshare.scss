@@ -61,6 +61,7 @@
 }
 
 .nsfw-content {
+  cursor: pointer;
   filter: blur(var(--nsfw-blur-radius));
   opacity: var(--nsfw-opacity-percent);
 }

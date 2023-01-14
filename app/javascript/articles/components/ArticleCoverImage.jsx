@@ -10,7 +10,9 @@ export const ArticleCoverImage = ({ article }) => {
         title={article.title}
       >
         <img
-          className="crayons-article__cover__image__feed"
+          className={`crayons-article__cover__image__feed${
+            article.nsfw ? ' nsfw-content' : ''
+          }`}
           src={article.main_image}
           width="650"
           height="275"

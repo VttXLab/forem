@@ -150,7 +150,7 @@ class Article < ApplicationRecord
   validates :rating_votes_count, presence: true
   validates :reactions_count, presence: true
   validates :slug, presence: { if: :published? }, format: /\A[0-9a-z\-_]*\z/
-  #validates :slug, uniqueness: { scope: :user_id }
+  # validates :slug, uniqueness: { scope: :user_id }
   validates :title, allow_blank: true, presence: true, length: { maximum: 128 }
   validates :user_subscriptions_count, presence: true
   validates :video, url: { allow_blank: true, schemes: %w[https http] }
@@ -174,7 +174,8 @@ class Article < ApplicationRecord
   before_validation :evaluate_markdown, :create_slug, :set_published_date
   before_validation :remove_prohibited_unicode_characters
   before_validation :normalize_title
-  before_validation :validate_nsfw
+  before_validation :validate_nsfw_image_list
+  before_validation :validate_nsfw_body
   before_validation :add_nsfw_tag
   before_save :set_cached_entities
   before_save :set_all_dates
@@ -359,7 +360,8 @@ class Article < ApplicationRecord
   scope :feed, lambda {
                  published.includes(:taggings)
                    .select(
-                     :id, :published_at, :processed_html, :user_id, :organization_id, :title, :path, :cached_tag_list, :image_list, :quick_share, :processed_preview_link, :nsfw
+                     :id, :published_at, :processed_html, :user_id, :organization_id, :title, :path, :cached_tag_list, 
+                     :image_list, :quick_share, :processed_preview_link, :nsfw
                    )
                }
 
@@ -422,67 +424,69 @@ class Article < ApplicationRecord
     parsed_markdown = MarkdownProcessor::Parser.new(parsed.content)
 
     doc = Nokogiri::HTML.fragment(parsed_markdown.finalize)
-    doc.search('.article-body-image-wrapper').each(&:remove)
-    doc.search('.//img').remove
+    doc.search(".article-body-image-wrapper").each(&:remove)
+    doc.search(".//img").remove
     p_empty = doc.at_css("p:first-child:empty")
-    if p_empty
-      p_empty.remove
-    end
+    p_empty.remove if p_empty
     self.description_html = Truncato.truncate(doc.to_html, max_length: 700, count_tags: false).strip
 
     # self.description_html = Truncato.truncate(parsed_markdown.finalize, max_length: 700, count_tags: false).strip
   end
 
   def processed_preview
-    self.preview_link = ''
-    self.processed_preview_link = ''
-    self.social_image = self.main_image.present? ? self.main_image : ''
+    self.preview_link = ""
+    self.processed_preview_link = ""
+    self.social_image = (main_image.presence || "")
 
-    preview_links = body_markdown.scan(/((https?|ftp):\/\/(\S*?\.\S*?))([\s)\[\]{},;"\':<]|\.\s|$)/i)
+    preview_links = body_markdown.scan(%r{((https?|ftp)://(\S*?\.\S*?))([\s)\[\]{},;"':<]|\.\s|$)}i)
 
-    if !preview_links
+    unless preview_links
       return
     end
 
     preview_links.each do |preview|
       preview_link = preview[0]
 
-      next if preview_link.match(/\.(png|jpg|jpep|webp|gif)$/i)
-      next if preview_link.match(/#{URL.domain}/i)
+      next if /\.(png|jpg|jpep|webp|gif)$/i.match?(preview_link)
+      next if /#{URL.domain}/i.match?(preview_link)
 
       fixed_preview = MarkdownProcessor::Fixer::FixForQuickShare.call(preview_link)
       parsed_preview = FrontMatterParser::Parser.new(:md).call(fixed_preview)
-      parsed_markdown = MarkdownProcessor::Parser.new(parsed_preview.content, source: self, user: user, liquid_tag_options: { is_preview: true })
+      parsed_markdown = MarkdownProcessor::Parser.new(parsed_preview.content, source: self, user: user,
+                                                                              liquid_tag_options: { is_preview: true })
 
       begin
-        if self.preview_link == ''
+        if self.preview_link == ""
           self.preview_link = preview_link
           self.processed_preview_link = parsed_markdown.finalize
         end
-      rescue
+      rescue StandardError
       end
 
       next if social_image.present?
 
       begin
-        doc = Nokogiri::HTML(self.processed_preview_link)
-        doc.xpath('//img').each do |img|
-          self.social_image = img['src']
+        doc = Nokogiri::HTML(processed_preview_link)
+        doc.xpath("//img").each do |img|
+          self.social_image = img["src"]
 
           # try download preview image
           relative_upload_path = "/uploads/previews"
           upload_path = "#{Rails.root}/public#{relative_upload_path}"
-          filename = self.quick_share ? title : SecureRandom.uuid
+          filename = quick_share ? title : SecureRandom.uuid
           Dir.mkdir(upload_path) unless Dir.exist?(upload_path)
 
-          tempfile = Down.download(img['src'], max_redirects: 3);
+          tempfile = Down.download(img["src"], max_redirects: 3)
 
           if tempfile
             file_path = "#{upload_path}/#{filename}#{File.extname(tempfile.original_filename)}"
             FileUtils.mv(tempfile.path, file_path)
             self.social_image = URL.url("#{relative_upload_path}/#{filename}#{File.extname(tempfile.original_filename)}")
 
-            img['src'] = Images::Optimizer.call(self.social_image, resize: { width: 180, height: 180, resizing_type: 'auto', enlarge: true, extend: true }).gsub(",", "%2C")
+            img["src"] =
+Images::Optimizer.call(social_image, resize: { width: 180, height: 180, resizing_type: "auto", enlarge: true, extend: true }).gsub(
+  ",", "%2C"
+)
             self.processed_preview_link = doc.to_html
           end
 
@@ -501,7 +505,7 @@ class Article < ApplicationRecord
         .tr("\n", " ")
         .strip
     else
-      ''
+      ""
     end
   end
 
@@ -759,7 +763,7 @@ class Article < ApplicationRecord
     processed_html = parsed_markdown.finalize
 
     doc = Nokogiri::HTML(processed_html)
-    doc.search('.c-embed', 'a', 'img').remove()
+    doc.search(".c-embed", "a", "img").remove
     self.processed_html = doc.to_html
     self.description = processed_description if description.blank?
 
@@ -1074,16 +1078,18 @@ class Article < ApplicationRecord
       .perform_async(user_id, AbExperiment::GoalConversionHandler::USER_PUBLISHES_POST_GOAL)
   end
 
-  def validate_nsfw
-    if (image_list == '' || image_list.nil?)
+  def validate_nsfw_image_list
+    self.nsfw = false
+
+    if image_list == "" || image_list.nil?
       return
     end
-    
+
     begin
-      image_list.split(',').each do |image|
-        uri = Addressable::URI.parse(image);
+      image_list.split(",").each do |image|
+        uri = Addressable::URI.parse(image)
         if Nsfw.unsafe?(Rails.public_path.to_s + uri.path.to_s)
-          self.nsfw = true;
+          self.nsfw = true
         end
       end
     rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
@@ -1091,17 +1097,57 @@ class Article < ApplicationRecord
     end
   end
 
+  def validate_nsfw_body
+    self.nsfw = false
+
+    doc = Nokogiri::HTML(processed_html)
+    doc.xpath("//img").each do |img|
+      if img["src"].match(/#{URL.domain}/i) || img["src"].start_with?("/")
+        uri = Addressable::URI.parse(img["src"])
+        image_path = Rails.public_path.to_s + uri.path.to_s
+      else
+        tempfile = Down.download(img["src"], max_redirects: 3)
+        next unless File.exist?(tempfile.path)
+
+        image_path = tempfile.path
+      end
+
+      begin
+        if Nsfw.unsafe?(image_path)
+          self.nsfw = true
+          img.append_class("nsfw-content")
+        end
+      rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
+        if main_image.include? img["src"]
+          self.main_image = ""
+        end
+
+        if img.parent.name == "a"
+          img.parent.remove
+        else
+          img.remove
+        end
+
+        self.body_markdown = body_markdown.gsub(/(!)(\[.*\])\(#{img['src']}\)/i, "")
+
+        File.delete(image_path) if File.exist?(image_path)
+      end
+    end
+
+    self.processed_html = doc.to_html
+  end
+
   def add_nsfw_tag
-    if !nsfw
+    unless nsfw
       return
     end
 
-    if !tag_list.include? 'nsfw'
-      if (tag_list.size >= MAX_TAG_LIST_SIZE)
-        tag_list.remove(tag_list[tag_list.size - 1], parse: true)
-      end
+    return if tag_list.include? "nsfw"
 
-      tag_list.add('nsfw', parse: true)
+    if tag_list.size >= MAX_TAG_LIST_SIZE
+      tag_list.remove(tag_list[tag_list.size - 1], parse: true)
     end
+
+    tag_list.add("nsfw", parse: true)
   end
 end

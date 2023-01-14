@@ -351,7 +351,9 @@ function buildArticleHTML(article, currentUserId = null) {
         title="${article.title}"
       >
         <img
-          class="crayons-article__cover__image"
+          class="crayons-article__cover__image ${
+            article.nsfw ? 'nsfw-content' : ''
+          }"
           src="${article.main_image}"
           width="650"
           height="275"

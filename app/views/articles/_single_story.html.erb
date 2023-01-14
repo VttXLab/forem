@@ -7,7 +7,7 @@
   <% if featured == true || (story.main_image.present?) %>
     <div class="crayons-article__cover crayons-article__cover__image__feed">
       <a href="<%= story.path %>" title="<%= story.title %>" aria-label="article" class="crayons-article__cover__image__feed crayons-story__cover__image">
-        <img src="<%= cloud_cover_url(story.main_image) %>" width="650" height="275" style="background-color:<%= story.main_image_background_hex_color %>;" class="crayons-article__cover__image__feed" alt="Cover image for <%= story.title %>">
+        <img src="<%= cloud_cover_url(story.main_image) %>" width="650" height="275" style="background-color:<%= story.main_image_background_hex_color %>;" class="crayons-article__cover__image__feed<%= story.nsfw ? " nsfw-content" : "" %>" alt="Cover image for <%= story.title %>">
       </a>
     </div>
   <% end %>
@@ -111,7 +111,7 @@
       <a href="<%= story.path %>" style="color: unset !important;" id="article-link-<%= story.id %>"><div class="text-styles text-truncate" style="padding: 1rem 0"><%= story.description_html ? story.description_html.html_safe : story.description %></div></a>
       <% if story.quick_share %>
         <% if story.image_list != '' %>
-        <div id="photo-grid-<%= story.id %>" class="photo-grid<%= story.nsfw ? ' nsfw-content' : '' %>" data-href="<%= story.path %>" data-images="<%= story.image_list %>"></div>
+        <div id="photo-grid-<%= story.id %>" class="photo-grid<%= story.nsfw ? " nsfw-content" : "" %>" data-href="<%= story.path %>" data-images="<%= story.image_list %>"></div>
         <% elsif story.processed_preview_link %>
         <div class="preview mb-4"><%= story.processed_preview_link.html_safe %></div>
         <% end %>
@@ -157,7 +157,7 @@
         </div>
         <div class="crayons-story__save">
           <small class="crayons-story__tertiary fs-xs mr-2">
-            <%= t("views.articles.reading_time", count: story.reading_time < 1 ? 1 : story.reading_time) %>
+            <%= t("views.articles.reading_time", count: [story.reading_time, 1].max) %>
           </small>
           <button
             type="button"

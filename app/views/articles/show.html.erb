@@ -106,7 +106,7 @@
             <%= render "articles/video_player", meta_tags: true, article: @article %>
           <% elsif @article.main_image.present? %>
             <div class="crayons-article__cover">
-              <img src="<%= cloud_cover_url(@article.main_image) %>" width="1000" height="420" style="background-color:<%= @article.main_image_background_hex_color %>;" class="crayons-article__cover__image" alt="Cover image for <%= @article.title %>">
+              <img src="<%= cloud_cover_url(@article.main_image) %>" width="1000" height="420" style="background-color:<%= @article.main_image_background_hex_color %>;" class="crayons-article__cover__image<%= @article.nsfw ? ' nsfw-content' : '' %>" alt="Cover image for <%= @article.title %>">
             </div>
           <% end %>
           <% end %>
@@ -178,7 +178,7 @@
           </div>
         </header>
 
-        <div class="crayons-article__main">
+        <div class="crayons-article__main<%= @article.nsfw ? ' nsfw-article' : '' %>">
           <% if @collection %>
             <%= render "articles/collection",
                        rendered_article: @article,
@@ -266,7 +266,42 @@
   </script>
 <% end %>
 <script>
-document.addEventListener('DOMContentLoaded', (event) => {
+onReady = () => {
   QSFBEmbedParse(1000);
-});
+
+  var nsfwImages = document.querySelectorAll('.nsfw-content');
+  for (let nsfwImage of nsfwImages) {
+    a = nsfwImage.parentElement;
+    
+    if (a.tagName != 'A') {
+      continue
+    }
+
+    if (a.dataset.href) {
+      continue
+    }
+
+    a.dataset.href = a.href;
+    a.setAttribute("href","javascript:void(0);");
+  }
+
+  document.addEventListener('click', (e) => {
+    target = e.target;
+    parent = e.target.parentElement;
+
+    let isNsfw = target.classList.contains('nsfw-content');
+    if (isNsfw) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      target.classList.remove('nsfw-content');
+      parent.setAttribute("href", parent.dataset.href);
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', onReady);
+if (window.InstantClick) {
+  window.InstantClick.on('change', onReady);
+}
 </script>
