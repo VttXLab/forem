@@ -178,3 +178,14 @@
 <%== TwitterTimelineTag.script %>
 
 <%= render "comments/hide_comments_modal" %>
+<script>
+onReady = () => {
+  QSFBEmbedParse(1000);
+  nsfwParse();
+}
+
+document.addEventListener('DOMContentLoaded', onReady);
+if (window.InstantClick) {
+  window.InstantClick.on('change', onReady);
+}
+</script>
