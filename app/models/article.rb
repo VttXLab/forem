@@ -174,6 +174,7 @@ class Article < ApplicationRecord
 
   before_validation :evaluate_nsfw_markdown
   before_validation :evaluate_markdown, :create_slug, :set_published_date
+  before_validation :evaluate_nsfw_main_image
   before_validation :remove_prohibited_unicode_characters
   before_validation :normalize_title
   before_validation :evaluate_nsfw_image_list

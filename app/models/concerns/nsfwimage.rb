@@ -24,6 +24,7 @@ module Nsfwimage
   end
 
   def set_nsfw
+    self.nsfw = false
     self.nsfw = true unless @nsfw_optimized_list.empty?
   end
 
@@ -61,37 +62,47 @@ module Nsfwimage
 
   def evaluate_nsfw_markdown
     image_tags = body_markdown.scan(/(!\[[^\]]*\]\((.*?)\s*("(?:.*[^"])")?\s*\))/i)
-    @nsfw_removed_list = []
-    @nsfw_optimized_list = []
 
     unless image_tags
       return
     end
 
     image_tags.each do |image_tag|
-      image_url = image_tag[1];
+      evaluate_nsfw_image(image_tag[1])
+    end
+  end
 
-      if image_url.match(/#{URL.domain}/i) || image_url.start_with?("/")
-        uri = Addressable::URI.parse(image_url)
-        image_path = Rails.public_path.to_s + uri.path.to_s
-      else
-        tempfile = Down.download(image_url, max_redirects: 3)
-        next unless File.exist?(tempfile.path)
+  def evaluate_nsfw_main_image
+    evaluate_nsfw_image(main_image) unless main_image.nil?
+  end
 
-        image_path = tempfile.path
+  private
+
+  def evaluate_nsfw_image(image_url)
+    @nsfw_removed_list = @nsfw_removed_list || []
+    @nsfw_optimized_list = @nsfw_optimized_list || []
+
+    if image_url.match(/#{URL.domain}/i) || image_url.start_with?("/")
+      uri = Addressable::URI.parse(image_url)
+      image_path = Rails.public_path.to_s + uri.path.to_s
+    else
+      tempfile = Down.download(image_url, max_redirects: 3)
+      return unless File.exist?(tempfile.path)
+
+      image_path = tempfile.path
+    end
+
+    begin
+      if Nsfw.unsafe?(image_path)
+        @nsfw_optimized_list.push(Images::Optimizer.call(image_url, width: 880).gsub(",", "%2C"))
       end
+    rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
+      @nsfw_removed_list.push(image_url)
+      self.body_markdown = body_markdown.gsub(/(!)(\[.*\])\(#{image_url}\)/i, "")
 
-      begin
-        if Nsfw.unsafe?(image_path)
-          @nsfw_optimized_list.push(Images::Optimizer.call(image_url, width: 880).gsub(",", "%2C"))
-        end
-      rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
-        @nsfw_removed_list.push(image_url)
-        self.body_markdown = body_markdown.gsub(/(!)(\[.*\])\(#{image_url}\)/i, "")
-
-        File.delete(image_path) if File.exist?(image_path)
-      rescue Exception => e
-      end
+      File.delete(image_path) if File.exist?(image_path)
+    rescue Exception => e
+      p e
     end
   end
 end
