@@ -1,8 +1,18 @@
 module Nsfwimage
   extend ActiveSupport::Concern
 
-  @nsfw_optimized_list
-  @nsfw_removed_list
+  @nsfw_optimized_list = []
+  @nsfw_removed_list = []
+
+  attr_accessor :nsfw_optimized_list, :nsfw_removed_list
+
+  def nsfw_optimized_list
+    @nsfw_optimized_list ||= []
+  end
+
+  def nsfw_removed_list
+    @nsfw_removed_list ||= []
+  end
 
   def evaluate_nsfw_image_list
     if image_list == "" || image_list.nil?
@@ -25,13 +35,13 @@ module Nsfwimage
 
   def set_nsfw
     self.nsfw = false
-    self.nsfw = true unless @nsfw_optimized_list.empty?
+    self.nsfw = true unless nsfw_optimized_list.empty?
   end
 
   def add_nsfw_class_cover
     return unless main_image.present?
 
-    if @nsfw_removed_list.include? main_image
+    if nsfw_removed_list.include? main_image
       self.main_image = ""
     end
   end
@@ -48,11 +58,11 @@ module Nsfwimage
   end
 
   def add_nsfw_class_body
-    return if @nsfw_optimized_list.empty?
+    return if nsfw_optimized_list.empty?
 
     doc = Nokogiri::HTML(processed_html)
     doc.xpath("//img").each do |img|
-      if @nsfw_optimized_list.include? img['src']
+      if nsfw_optimized_list.include? img['src']
         img.append_class("nsfw-content")
       end
     end
@@ -79,9 +89,6 @@ module Nsfwimage
   private
 
   def evaluate_nsfw_image(image_url)
-    @nsfw_removed_list = @nsfw_removed_list || []
-    @nsfw_optimized_list = @nsfw_optimized_list || []
-
     if image_url.match(/#{URL.domain}/i) || image_url.start_with?("/")
       uri = Addressable::URI.parse(image_url)
       image_path = Rails.public_path.to_s + uri.path.to_s
@@ -94,10 +101,10 @@ module Nsfwimage
 
     begin
       if Nsfw.unsafe?(image_path)
-        @nsfw_optimized_list.push(Images::Optimizer.call(image_url, width: 880).gsub(",", "%2C"))
+        nsfw_optimized_list.push(Images::Optimizer.call(image_url, width: 880).gsub(",", "%2C"))
       end
     rescue Nsfw::NsfwEroticError, Nsfw::NsfwHentaiError => e
-      @nsfw_removed_list.push(image_url)
+      nsfw_removed_list.push(image_url)
       self.body_markdown = body_markdown.gsub(/(!)(\[.*\])\(#{image_url}\)/i, "")
 
       File.delete(image_path) if File.exist?(image_path)
