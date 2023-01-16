@@ -32,7 +32,7 @@ module Nsfw
       raise NsfwHentaiError.new
     end
 
-    return predictions["neutral"] >= SAFETY_THRESHOLD
+    return predictions["neutral"] >= SAFETY_THRESHOLD || predictions["drawings"] >= SAFETY_THRESHOLD
   end
 
   def self.unsafe?(image_path)
