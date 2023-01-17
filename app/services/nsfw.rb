@@ -1,7 +1,7 @@
 require "nsfw"
 
 module Nsfw
-  SAFETY_THRESHOLD = 0.7
+  SAFETY_THRESHOLD = 0.4
   PORN_THRESHOLD = 0.65
   HENTAI_THRESHOLD = 0.6 
 
