@@ -73,9 +73,7 @@ module Nsfwimage
   def evaluate_nsfw_markdown
     image_tags = body_markdown.scan(/(!\[[^\]]*\]\((.*?)\s*("(?:.*[^"])")?\s*\))/i)
 
-    unless image_tags
-      return
-    end
+    return unless image_tags
 
     image_tags.each do |image_tag|
       evaluate_nsfw_image(image_tag[1])
@@ -98,6 +96,8 @@ module Nsfwimage
 
       image_path = tempfile.path
     end
+
+    return if File.binread(image_path, 3) == 'GIF'
 
     begin
       if Nsfw.unsafe?(image_path)
