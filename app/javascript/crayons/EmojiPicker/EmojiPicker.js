@@ -42,9 +42,9 @@ export const EmojiPicker = ({ textAreaRef }) => {
         }
 
         if (picker == null) {
-            let popupPicker = createPopup({
+            const popupPicker = createPopup({
                 emojisPerRow: 7,
-                theme: 'auto',
+                theme: 'picmo__auto',
                 visibleRows: 5
             }, {
                 triggerElement: target,
