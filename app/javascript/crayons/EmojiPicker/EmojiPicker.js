@@ -45,7 +45,9 @@ export const EmojiPicker = ({ textAreaRef }) => {
             const popupPicker = createPopup({
                 emojisPerRow: 7,
                 theme: 'picmo__auto',
-                visibleRows: 5
+                visibleRows: 5,
+                showSearch: false,
+                showPreview: false
             }, {
                 triggerElement: target,
                 referenceElement: target,
