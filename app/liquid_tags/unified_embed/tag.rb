@@ -33,17 +33,23 @@ module UnifiedEmbed
       # is valid (e.g. no typos).
       # If the link is invalid, we raise an error encouraging the user to
       # check their link and try again.
-      validated_link = validate_link(input: stripped_input)
-      liquid_tag_options = parse_context.instance_variable_get(:@template_options)[:liquid_tag_options]
-      if liquid_tag_options != nil && liquid_tag_options[:is_preview]
-        klass = OpenGraphTag
-      else
-        klass = UnifiedEmbed::Registry.find_liquid_tag_for(link: validated_link)
+      begin
+        validated_link = validate_link(input: stripped_input)
+        liquid_tag_options = parse_context.instance_variable_get(:@template_options)[:liquid_tag_options]
+        if liquid_tag_options != nil && liquid_tag_options[:is_preview]
+          klass = OpenGraphTag
+        else
+          klass = UnifiedEmbed::Registry.find_liquid_tag_for(link: validated_link)
+        end
+      rescue => exception
+        validated_link = stripped_input
+        klass = UrlTag
       end
 
       # Why the __send__?  Because a LiquidTagBase class "privatizes"
       # the `.new` method.  And we want to instantiate the specific
       # liquid tag for the given link.
+
       klass.__send__(:new, tag_name, validated_link, parse_context)
     end
 
@@ -73,7 +79,7 @@ module UnifiedEmbed
         when Net::HTTPNotFound, Net::HTTPForbidden
           raise StandardError, I18n.t("liquid_tags.unified_embed.tag.not_found") if retries.zero?
 
-          validate_link(input: input, retries: retries, method: Net::HTTP::Get)
+          validate_link(input: input, retries: retries - 1, method: Net::HTTP::Get)
         else
           raise StandardError, I18n.t("liquid_tags.unified_embed.tag.invalid_url")
         end
