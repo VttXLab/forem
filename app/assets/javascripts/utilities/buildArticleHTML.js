@@ -324,8 +324,8 @@ function buildArticleHTML(article, currentUserId = null) {
 
     var title = ``;
     var description = article.description_html
-      ? `<div class="text-styles text-truncate" style="padding: 1rem 0">${article.description_html}</div>`
-      : `<div class="text-styles text-truncate" style="padding: 1rem 0">${article.description}</div>`;
+      ? `<div class="text-styles text-truncate mb-4">${article.description_html}</div>`
+      : `<div class="text-styles text-truncate mb-4">${article.description}</div>`;
     var photoGrid = '';
     if (article.quick_share) {
       if (article.image_list.length > 0) {
@@ -384,14 +384,14 @@ function buildArticleHTML(article, currentUserId = null) {
             </div>\
             <div class="crayons-story__indention">
               ${title}\
+              <div class="crayons-story__tags">
+                ${tagString}
+              </div>\
               <a href="${article.path}" style="color: unset;">
               ${description}\
               </a>
               ${processed_preview_link}\
               ${photoGrid}\
-              <div class="crayons-story__tags">
-                ${tagString}
-              </div>\
               ${searchSnippetHTML}\
               <div class="crayons-story__bottom">\
                 <div class="crayons-story__details">

@@ -121,6 +121,7 @@ export const Article = ({
 
           <div className="crayons-story__indention">
             {version == 'v0' ? null : <ContentTitle article={article} />}
+            <TagList tags={article.tag_list} flare_tag={article.flare_tag} />
             <a
               href={article.path}
               style="color: unset !important;"
@@ -128,14 +129,12 @@ export const Article = ({
             >
               {article.description_html ? (
                 <div
-                  class="text-styles text-truncate"
-                  style={{ padding: '1rem 0' }}
+                  class="text-styles text-truncate mb-4"
                   dangerouslySetInnerHTML={{ __html: article.description_html }}
                 />
               ) : (
                 <div
-                  class="text-styles text-truncate"
-                  style={{ padding: '1rem 0' }}
+                  class="text-styles text-truncate mb-4"
                 >
                   {article.description}
                 </div>
@@ -154,7 +153,7 @@ export const Article = ({
             {version == 'v0' && (
               <div
                 id={`photo-grid-${article.id}`}
-                class={`photo-grid mb-4 ${article.nsfw ? 'nsfw-content' : ''}`}
+                class={`photo-grid ${article.nsfw ? 'nsfw-content' : ''}`}
                 data-href={article.path}
                 data-images={article.image_list}
                 data-loaded="true"
@@ -168,7 +167,6 @@ export const Article = ({
                 />
               </div>
             )}
-            <TagList tags={article.tag_list} flare_tag={article.flare_tag} />
 
             {article.class_name === 'Article' && (
               // eslint-disable-next-line no-underscore-dangle

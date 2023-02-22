@@ -1,6 +1,8 @@
 :root {
   --nsfw-blur-radius: 0.6rem;
   --nsfw-opacity-percent: 0.3;
+  --content-padding-x: var(--su-5) !important;
+  --content-padding-y: var(--su-5) !important;
 }
 
 .crayons-article__body .fb-post,
@@ -15,6 +17,7 @@
   -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
   mask-image: linear-gradient(180deg, #000 60%, transparent);
   max-height: 200px;
+  padding:  var(--su-2) 0;
 }
 
 .profile-comment-row .text-truncate {
@@ -32,6 +35,49 @@
 
 .preview .c-embed__cover img {
   width: 100vw;
+}
+
+.emoji-popup {
+  z-index: 1;
+}
+
+.picmo__popupContainer .picmo__closeButton {
+  z-index: 2 !important;
+}
+
+.nsfw-content {
+  cursor: pointer;
+  filter: blur(var(--nsfw-blur-radius));
+  opacity: var(--nsfw-opacity-percent);
+}
+
+.crayons-story .photo-grid {
+  margin: 0 calc(var(--su-5) * -1);
+}
+
+.crayons-story {
+  margin-bottom: var(--su-5) !important;
+}
+
+.crayons-story__tags {
+  margin-bottom: 0;
+}
+
+.crayons-story__bottom {
+  margin: calc(var(--su-5) * -1) calc(var(--su-5) * -1) calc(var(--su-5) * -1);
+  margin-top: 0;
+  padding: var(--su-1) var(--su-4);
+  background-color: #f8f8f8;
+  border-radius: 0 0 var(--su-2) var(--su-2);
+  border-top: 1px solid #dddddd;
+}
+
+.crayons-story__indention {
+  padding-left: 0 !important;
+}
+
+.crayons-story__save .bookmark-button, .crayons-story__save .c-btn--icon-alone {
+  padding: 0 !important;
 }
 
 @media screen and (min-width: 640px) {
@@ -52,16 +98,14 @@
   }
 }
 
-.emoji-popup {
-  z-index: 1;
+@media screen and (max-width: 768px) {
+  .crayons-story__bottom {
+    margin: 0 calc(var(--su-4) * -1) calc(var(--su-4) * -1) !important;
+  }
 }
 
-.picmo__popupContainer .picmo__closeButton {
-  z-index: 2 !important;
-}
-
-.nsfw-content {
-  cursor: pointer;
-  filter: blur(var(--nsfw-blur-radius));
-  opacity: var(--nsfw-opacity-percent);
+@media screen and (max-width: 640px) {
+  .crayons-story__bottom {
+    margin: 0 calc(var(--su-4) * -1) calc(var(--su-3) * -1) !important;
+  }
 }
