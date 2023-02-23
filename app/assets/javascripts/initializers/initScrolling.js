@@ -454,7 +454,6 @@ function initScrolling() {
   }
   window.addEventListener('photoGridLoaded', () => {
     // eslint-disable-next-line no-console
-    console.log("photoGridLoaded");
     setTimeout(initViewerJS, 500);
     setTimeout(initViewerJS, 2000);
     QSFBEmbedParse(2000);

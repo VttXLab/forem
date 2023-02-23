@@ -150,7 +150,7 @@ export const Article = ({
                   }}
                 />
               )}
-            {version == 'v0' && (
+            {article.quick_share && article.image_list.length > 0 && (
               <div
                 id={`photo-grid-${article.id}`}
                 class={`photo-grid ${article.nsfw ? 'nsfw-content' : ''}`}
