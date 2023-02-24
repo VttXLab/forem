@@ -353,14 +353,9 @@ GEM
       guard (~> 2.1)
       guard-compat (~> 1.1)
       rspec (>= 2.99.0, < 4.0)
-<<<<<<< HEAD
     guess_html_encoding (0.0.11)
-    hairtrigger (0.2.25)
-      activerecord (>= 5.0, < 8)
-=======
     hairtrigger (1.0.0)
       activerecord (>= 6.0, < 8)
->>>>>>> upstream/main
       ruby2ruby (~> 2.4)
       ruby_parser (~> 3.10)
     hashdiff (1.0.1)
@@ -901,14 +896,10 @@ GEM
     thread_safe (0.3.6)
     tilt (2.0.11)
     timecop (0.9.6)
-<<<<<<< HEAD
-    timeout (0.3.0)
+    timeout (0.3.1)
     truncato (0.7.12)
       htmlentities (~> 4.3.1)
       nokogiri (>= 1.7.0, <= 2.0)
-=======
-    timeout (0.3.1)
->>>>>>> upstream/main
     twitter (7.0.0)
       addressable (~> 2.3)
       buftok (~> 0.2.0)
