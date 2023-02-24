@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import PropTypes from 'prop-types';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import ReactImageGrid from '@cordelia273/react-image-grid';
+import { ImageGrid } from './ImageGrid/ImageGrid';
 import { Toolbar } from './Toolbar';
 import { handleImagePasted } from './pasteImageHelpers';
 import { ImageUploader } from './ImageUploader';
@@ -68,6 +68,12 @@ export const EditorBody = ({
       handleImageUploadFailure(textAreaRef),
     ),
   });
+
+  const onRemoveImage = (image) => {
+    images.splice(images.indexOf(image), 1);
+    setImages(images);
+    imagesOnInput(images.join(','));
+  }
 
   useLayoutEffect(() => {
     if (textAreaRef.current) {
@@ -157,7 +163,7 @@ export const EditorBody = ({
 
       {version === 'v0' ? (
         <div style={{ maxWidth: 800, maxHeight: 400, height: 400 }}>
-          <ReactImageGrid images={images} modal={false} />
+          <ImageGrid onRemoveImage={onRemoveImage} images={images} modal={true} />
         </div>
       ) : null}
     </div>
