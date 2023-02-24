@@ -134,7 +134,8 @@ module Notifications
               title: recent_reaction.reactable.title,
               class: {
                 name: recent_reaction.reactable.class.name
-              }
+              },
+              quick_share: recent_reaction.reactable.quick_share
             },
             aggregated_siblings: siblings,
             updated_at: recent_reaction.updated_at
