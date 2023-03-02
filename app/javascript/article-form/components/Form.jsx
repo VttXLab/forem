@@ -12,6 +12,8 @@ export const Form = ({
   tagsOnInput,
   imagesDefaultValue,
   imagesOnInput,
+  previewLink,
+  onPreviewLinkChange,
   bodyDefaultValue,
   bodyOnChange,
   bodyHasFocus,
@@ -56,6 +58,8 @@ export const Form = ({
         tagsOnInput={tagsOnInput}
         imagesDefaultValue={imagesDefaultValue}
         imagesOnInput={imagesOnInput}
+        previewLink={previewLink}
+        onPreviewLinkChange={onPreviewLinkChange}
         onMainImageUrlChange={onMainImageUrlChange}
         version={version}
       />

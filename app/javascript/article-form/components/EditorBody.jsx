@@ -1,6 +1,9 @@
 import { h } from 'preact';
 import PropTypes from 'prop-types';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { LinkPreview } from './LinkPreview/LinkPreview';
+import { LinkPreview as LP } from '@dhaiwat10/react-link-preview';
+import parser from 'html-metadata-parser';
 import { ImageGrid } from './ImageGrid/ImageGrid';
 import { Toolbar } from './Toolbar';
 import { handleImagePasted } from './pasteImageHelpers';
@@ -26,6 +29,8 @@ export const EditorBody = ({
   tagsOnInput,
   imagesDefaultValue,
   imagesOnInput,
+  previewLink,
+  onPreviewLinkChange,
   onMainImageUrlChange,
   switchHelpContext,
   version,
@@ -35,6 +40,7 @@ export const EditorBody = ({
   const [images, setImages] = useState(
     imagesDefaultValue != '' ? imagesDefaultValue.split(',') : [],
   );
+  const [urls, setUrls] = useState([]);
   const smallScreen = useMediaQuery(`(max-width: ${BREAKPOINTS.Medium - 1}px)`);
 
   document.addEventListener('upload_image_success', (e) => {
@@ -75,11 +81,32 @@ export const EditorBody = ({
     imagesOnInput(images.join(','));
   }
 
+  const previewLinkHandler = (content) => {
+    let matchUrls = content.match(new RegExp(
+      // eslint-disable-next-line no-control-regex
+      "((ftp|http|https|gopher|mailto|news|nntp|telnet|wais|file|prospero|aim|webcal):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){2,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))","g"
+    ));
+
+    matchUrls = Array.from(new Set(matchUrls));
+
+    const difference = matchUrls.filter(x => !urls.includes(x));
+
+    if (difference.length > 0) {
+      setUrls(urls.concat(difference));
+    }
+  }
+
+  const onPreviewSelected = (url) => {
+    onPreviewLinkChange(url);
+  }
+
   useLayoutEffect(() => {
     if (textAreaRef.current) {
       setElement(textAreaRef.current);
       setPasteElement(textAreaRef.current);
     }
+
+    previewLinkHandler(textAreaRef.current.innerHTML);
   });
 
   // const handleImageUploadStarted = () => {
@@ -110,7 +137,11 @@ export const EditorBody = ({
           )
         }
         autoResize
-        onChange={onChange}
+        // onChange={onChange}
+        onChange={(e) => {
+          previewLinkHandler(e.target.value);
+          onChange(e);
+        }}
         onFocus={switchHelpContext}
         aria-label="Post Content"
         name="body_markdown"
@@ -161,11 +192,12 @@ export const EditorBody = ({
         </div>
       )}
 
-      {version === 'v0' ? (
+      {version === 'v0' && images.length > 0 && (
         <div style={{ maxWidth: 800, maxHeight: 400, height: 400 }}>
           <ImageGrid onRemoveImage={onRemoveImage} images={images} modal={true} />
         </div>
-      ) : null}
+      )}
+      {urls.length > 0 && images.length == 0 && (<LinkPreview urls={urls} defaultUrl={previewLink} onPreviewSelected={onPreviewSelected} />)}
     </div>
   );
 };

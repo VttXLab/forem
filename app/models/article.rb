@@ -134,6 +134,7 @@ class Article < ApplicationRecord
   validates :cached_tag_list, length: { maximum: 126 }
   validates :image_list, allow_blank: true, length: { minimum: 0 }
   validates :quick_share, allow_blank: true, presence: true
+  validates :preview_link, allow_blank: true, length: { minimum: 0 }
   validates :canonical_url,
             uniqueness: { allow_nil: true, scope: :published, message: unique_url_error },
             if: :published?
@@ -308,7 +309,7 @@ class Article < ApplicationRecord
 
   scope :limited_column_select, lambda {
     select(:path, :title, :id, :published,
-           :comments_count, :public_reactions_count, :cached_tag_list, :image_list, :processed_preview_link,
+           :comments_count, :public_reactions_count, :cached_tag_list, :image_list, :preview_link, :processed_preview_link,
            :main_image, :main_image_background_hex_color, :updated_at, :slug,
            :video, :user_id, :organization_id, :video_source_url, :video_code,
            :video_thumbnail_url, :video_closed_caption_track_url,
@@ -319,7 +320,7 @@ class Article < ApplicationRecord
 
   scope :limited_columns_internal_select, lambda {
     select(:path, :title, :id, :featured, :approved, :published,
-           :comments_count, :public_reactions_count, :cached_tag_list, :image_list, :processed_preview_link,
+           :comments_count, :public_reactions_count, :cached_tag_list, :image_list, :preview_link, :processed_preview_link,
            :main_image, :main_image_background_hex_color, :updated_at,
            :video, :user_id, :organization_id, :video_source_url, :video_code,
            :video_thumbnail_url, :video_closed_caption_track_url, :social_image,
@@ -366,7 +367,7 @@ class Article < ApplicationRecord
                  published.includes(:taggings)
                    .select(
                      :id, :published_at, :processed_html, :user_id, :organization_id, :title, :path, :cached_tag_list, 
-                     :image_list, :quick_share, :processed_preview_link, :nsfw
+                     :image_list, :quick_share, :preview_link, :processed_preview_link, :nsfw
                    )
                }
 
@@ -439,68 +440,107 @@ class Article < ApplicationRecord
   end
 
   def processed_preview
-    self.preview_link = ""
-    self.processed_preview_link = ""
-    self.social_image = (main_image.presence || "")
-
-    preview_links = body_markdown.scan(%r{((https?|ftp)://(\S*?\.\S*?))([\s)\[\]{},;"':<]|\.\s|$)}i)
-
-    unless preview_links
-      return
-    end
-
-    preview_links.each do |preview|
-      preview_link = preview[0]
-
-      next if /\.(png|jpg|jpep|webp|gif)$/i.match?(preview_link)
-      next if /#{URL.domain}/i.match?(preview_link)
-
+    begin
       fixed_preview = MarkdownProcessor::Fixer::FixForQuickShare.call(preview_link)
       parsed_preview = FrontMatterParser::Parser.new(:md).call(fixed_preview)
       parsed_markdown = MarkdownProcessor::Parser.new(parsed_preview.content, source: self, user: user,
                                                                               liquid_tag_options: { is_preview: true })
-
-      begin
-        if self.preview_link == ""
-          self.preview_link = preview_link
-          self.processed_preview_link = parsed_markdown.finalize
-        end
-      rescue StandardError
-      end
-
-      next if social_image.present?
-
-      begin
-        doc = Nokogiri::HTML(processed_preview_link)
-        doc.xpath("//img").each do |img|
-          self.social_image = img["src"]
-
-          # try download preview image
-          relative_upload_path = "/uploads/previews"
-          upload_path = "#{Rails.root}/public#{relative_upload_path}"
-          filename = quick_share ? title : SecureRandom.uuid
-          Dir.mkdir(upload_path) unless Dir.exist?(upload_path)
-
-          tempfile = Down.download(img["src"], max_redirects: 3)
-
-          if tempfile
-            file_path = "#{upload_path}/#{filename}#{File.extname(tempfile.original_filename)}"
-            FileUtils.mv(tempfile.path, file_path)
-            self.social_image = URL.url("#{relative_upload_path}/#{filename}#{File.extname(tempfile.original_filename)}")
-
-            img["src"] =
-Images::Optimizer.call(social_image, resize: { width: 180, height: 180, resizing_type: "auto", enlarge: true, extend: true }).gsub(
-  ",", "%2C"
-)
-            self.processed_preview_link = doc.to_html
-          end
-
-          break
-        end
-      rescue StandardError => e
-      end
-      break
+      self.processed_preview_link = parsed_markdown.finalize
+    rescue StandardError => e
     end
+
+    begin
+      doc = Nokogiri::HTML(processed_preview_link)
+      doc.xpath("//img").each do |img|
+        self.social_image = img["src"]
+
+        # try download preview image
+        relative_upload_path = "/uploads/previews"
+        upload_path = "#{Rails.root}/public#{relative_upload_path}"
+        filename = quick_share ? title : SecureRandom.uuid
+        Dir.mkdir(upload_path) unless Dir.exist?(upload_path)
+
+        tempfile = Down.download(img["src"], max_redirects: 3)
+
+        if tempfile
+          file_path = "#{upload_path}/#{filename}#{File.extname(tempfile.original_filename)}"
+          FileUtils.mv(tempfile.path, file_path)
+          self.social_image = URL.url("#{relative_upload_path}/#{filename}#{File.extname(tempfile.original_filename)}")
+
+          img["src"] =
+Images::Optimizer.call(social_image, resize: { width: 180, height: 180, resizing_type: "auto", enlarge: true, extend: true }).gsub(
+",", "%2C"
+)
+          self.processed_preview_link = doc.to_html
+        end
+
+        break
+      end
+    rescue StandardError => e
+    end
+
+#     self.preview_link = ""
+#     self.processed_preview_link = ""
+#     self.social_image = (main_image.presence || "")
+
+#     preview_links = body_markdown.scan(%r{((https?|ftp)://(\S*?\.\S*?))([\s)\[\]{},;"':<]|\.\s|$)}i)
+
+#     unless preview_links
+#       return
+#     end
+
+#     preview_links.each do |preview|
+#       preview_link = preview[0]
+
+#       next if /\.(png|jpg|jpep|webp|gif)$/i.match?(preview_link)
+#       next if /#{URL.domain}/i.match?(preview_link)
+
+#       fixed_preview = MarkdownProcessor::Fixer::FixForQuickShare.call(preview_link)
+#       parsed_preview = FrontMatterParser::Parser.new(:md).call(fixed_preview)
+#       parsed_markdown = MarkdownProcessor::Parser.new(parsed_preview.content, source: self, user: user,
+#                                                                               liquid_tag_options: { is_preview: true })
+
+#       begin
+#         if self.preview_link == ""
+#           self.preview_link = preview_link
+#           self.processed_preview_link = parsed_markdown.finalize
+#         end
+#       rescue StandardError
+#       end
+
+#       next if social_image.present?
+
+#       begin
+#         doc = Nokogiri::HTML(processed_preview_link)
+#         doc.xpath("//img").each do |img|
+#           self.social_image = img["src"]
+
+#           # try download preview image
+#           relative_upload_path = "/uploads/previews"
+#           upload_path = "#{Rails.root}/public#{relative_upload_path}"
+#           filename = quick_share ? title : SecureRandom.uuid
+#           Dir.mkdir(upload_path) unless Dir.exist?(upload_path)
+
+#           tempfile = Down.download(img["src"], max_redirects: 3)
+
+#           if tempfile
+#             file_path = "#{upload_path}/#{filename}#{File.extname(tempfile.original_filename)}"
+#             FileUtils.mv(tempfile.path, file_path)
+#             self.social_image = URL.url("#{relative_upload_path}/#{filename}#{File.extname(tempfile.original_filename)}")
+
+#             img["src"] =
+# Images::Optimizer.call(social_image, resize: { width: 180, height: 180, resizing_type: "auto", enlarge: true, extend: true }).gsub(
+#   ",", "%2C"
+# )
+#             self.processed_preview_link = doc.to_html
+#           end
+
+#           break
+#         end
+#       rescue StandardError => e
+#       end
+#       break
+#     end
   end
 
   def processed_description

@@ -93,6 +93,7 @@ export class ArticleForm extends Component {
             tagList: previousContent.tagList || '',
             imageList: previousContent.imageList || '',
             quickShare: previousContent.quickShare || version == 'v0',
+            previewLink: previousContent.previewLink || '',
             mainImage: previousContent.mainImage || null,
             bodyMarkdown: previousContent.bodyMarkdown || '',
             edited: true,
@@ -108,7 +109,7 @@ export class ArticleForm extends Component {
       this.publishedAtTime = this.publishedAtWas.format('HH:mm');
       this.publishedAtDate = this.publishedAtWas.format('YYYY-MM-DD');
     }
-
+    console.log(this.article);
     this.state = {
       formKey: new Date().toISOString(),
       id: this.article.id || null, // eslint-disable-line react/no-unused-state
@@ -116,6 +117,7 @@ export class ArticleForm extends Component {
       tagList: this.article.cached_tag_list || '',
       imageList: this.article.image_list || '',
       quickShare: this.article.quick_share || version == 'v0',
+      previewLink: this.article.preview_link || '',
       description: '', // eslint-disable-line react/no-unused-state
       canonicalUrl: this.article.canonical_url || '', // eslint-disable-line react/no-unused-state
       publishedAtTime: this.publishedAtTime,
@@ -167,7 +169,7 @@ export class ArticleForm extends Component {
   }
 
   localStoreContent = () => {
-    const { version, title, tagList, imageList, quickShare, mainImage, bodyMarkdown } = this.state;
+    const { version, title, tagList, imageList, quickShare, previewLink, mainImage, bodyMarkdown } = this.state;
     const updatedAt = new Date();
     localStorage.setItem(
       `editor-${version}-${this.url}`,
@@ -176,6 +178,7 @@ export class ArticleForm extends Component {
         tagList,
         imageList,
         quickShare,
+        previewLink,
         mainImage,
         bodyMarkdown,
         updatedAt,
@@ -320,6 +323,12 @@ export class ArticleForm extends Component {
     });
   };
 
+  onPreviewLinkChange = (url) => {
+    this.setState({
+      previewLink: url,
+    });
+  }
+
   removeLocalStorage = () => {
     const { version } = this.state;
     localStorage.removeItem(`editor-${version}-${this.url}`);
@@ -378,6 +387,7 @@ export class ArticleForm extends Component {
       title: this.article.title || '',
       tagList: this.article.cached_tag_list || '',
       imageList: this.article.image_list || '',
+      previewLink: this.article.preview_link || '',
       description: '', // eslint-disable-line react/no-unused-state
       canonicalUrl: this.article.canonical_url || '', // eslint-disable-line react/no-unused-state
       publishedAtTime: this.publishedAtTime,
@@ -444,6 +454,7 @@ export class ArticleForm extends Component {
       tagList,
       imageList,
       quickShare,
+      previewLink,
       bodyMarkdown,
       published,
       publishedAtTime,
@@ -516,6 +527,8 @@ export class ArticleForm extends Component {
             bodyHasFocus={false}
             version={version}
             quickShare={quickShare}
+            previewLink={previewLink}
+            onPreviewLinkChange={this.onPreviewLinkChange}
             mainImage={mainImage}
             onMainImageUrlChange={this.handleMainImageUrlChange}
             errors={errors}

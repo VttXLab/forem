@@ -1,5 +1,30 @@
 import { validateFileInputs } from '../packs/validateFileInputs';
 
+export const fetchHtml = async (url) => {
+  return await fetch('/fetch_url', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'X-CSRF-Token': window.csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      raw: true
+    }),
+    credentials: 'same-origin',
+  })
+    .then(async (response) => {
+      const payload = await response.json();
+
+      if (response.status !== 200) {
+        throw payload;
+      }
+
+      return payload.data;
+    });
+}
+
 export function previewUrl(payload, successCb, failureCb) {
   fetch('/fetch_url', {
     method: 'POST',

@@ -14,6 +14,15 @@ class FetchUrlController < ApplicationController
     
     url = params[:url]
     html = fetch_html(url)
+
+    if params[:raw]
+      render :json => {
+        :status => "ok", 
+        :data => html
+      }
+      return
+    end
+
     readability = Readability::Document.new(html, :tags => WHITELIST_TAGS, :attributes => WHITELIST_ATTRIBUTES, :ignore_image_format => ["gif", "jpg", "jpeg", "png", "*"], :remove_empty_nodes => true)
     body_markdown = ReverseMarkdown
       .convert(readability.content, github_flavored: true)
