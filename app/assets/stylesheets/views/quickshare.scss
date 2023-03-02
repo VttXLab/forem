@@ -17,7 +17,7 @@
   -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
   mask-image: linear-gradient(180deg, #000 60%, transparent);
   max-height: 200px;
-  padding:  var(--su-2) 0;
+  padding: var(--su-2) 0;
 }
 
 .profile-comment-row .text-truncate {
@@ -76,8 +76,13 @@
   padding-left: 0 !important;
 }
 
-.crayons-story__save .bookmark-button, .crayons-story__save .c-btn--icon-alone {
+.crayons-story__save .bookmark-button,
+.crayons-story__save .c-btn--icon-alone {
   padding: 0 !important;
+}
+
+.crayons-card .c-embed__favicon {
+  margin: 0 var(--su-2) 0 0 !important;
 }
 
 @media screen and (min-width: 640px) {
