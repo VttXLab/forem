@@ -109,7 +109,7 @@ export class ArticleForm extends Component {
       this.publishedAtTime = this.publishedAtWas.format('HH:mm');
       this.publishedAtDate = this.publishedAtWas.format('YYYY-MM-DD');
     }
-    console.log(this.article);
+
     this.state = {
       formKey: new Date().toISOString(),
       id: this.article.id || null, // eslint-disable-line react/no-unused-state

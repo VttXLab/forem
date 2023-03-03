@@ -440,6 +440,11 @@ class Article < ApplicationRecord
   end
 
   def processed_preview
+    if self.preview_link == ''
+      self.processed_preview_link = ''
+      return
+    end
+
     begin
       fixed_preview = MarkdownProcessor::Fixer::FixForQuickShare.call(preview_link)
       parsed_preview = FrontMatterParser::Parser.new(:md).call(fixed_preview)

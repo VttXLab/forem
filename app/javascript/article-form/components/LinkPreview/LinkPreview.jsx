@@ -4,26 +4,34 @@ import PropTypes from "prop-types";
 import styled from "styled-components";
 // import parser from 'html-metadata-parser';
 import { LinkPreview as LP } from '@dhaiwat10/react-link-preview';
+import { parse as HTML } from "node-html-parser";
 import { fetchHtml } from '../../actions';
-import { parse as HTML, HTMLElement } from "node-html-parser";
 
-const EditButton = styled.div`
-  width: calc(var(--su-4)*11);
-  text-indent: var(--su-2);
+const ButtonsContainer = styled.div`
   display: flex;
   justify-content: center;
   position: absolute;
   z-index: 1;
+`;
+
+const EditButton = styled.div`
+  height: calc(var(--su-4) * 2.4);
+  display: flex;
+  justify-content: center;
+  text-indent: var(--su-2);
   background: white;
-  border-radius: var(--su-3);
+  border-radius: var(--su-5);
   --webkit-border-radius: var(--su-3);
-  padding: var(--su-2);
+  padding: var(--su-2) calc(var(--su-4) * 0.59);
   text-align: center;
-  margin: var(--su-4);
+  margin: var(--su-4) 0 0 var(--su-4);
   cursor: pointer;
   box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
   -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
   -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+  &:hover {
+    border-radius: var(--su-4);
+  }
 `;
 
 const CloseEditBtn = styled.div`
@@ -101,6 +109,37 @@ const parse = async (data) => {
 
 }
 
+const HoverBtn = ({label, Icon, onClick }) => {
+  const [ hover, setHover ] = useState(false);
+
+  return (
+    <EditButton
+      onMouseOver={()=>{
+        setHover(true)
+      }}
+      onMouseOut={()=>{
+        setHover(false)
+      }}
+      onClick={onClick}
+    >
+      <Icon />
+      {hover && (<span>{label}</span>)}
+    </EditButton>
+  )
+}
+
+const ChangeIcon = () => {
+  return (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z"/>
+</svg>);
+}
+
+const TrashIcon = () => {
+  return (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+  <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
+</svg>);
+}
+
 export const LinkPreview = ({ urls, defaultUrl, onPreviewSelected }) => {
   const [ currentUrls, setCurrentUrls ] = useState([]);
   const [ metadatas, setMetadatas ] = useState({});
@@ -172,6 +211,12 @@ export const LinkPreview = ({ urls, defaultUrl, onPreviewSelected }) => {
     setEdit(!edit);
   }
 
+  const handleRemoveAll = () => {
+    onPreviewSelected('');
+    setCurrentUrls([]);
+    setNewUrl('');
+  }
+
   const handlePreviewClick = (url) => {
     onPreviewSelected(url);
     setEdit(false);
@@ -205,11 +250,13 @@ export const LinkPreview = ({ urls, defaultUrl, onPreviewSelected }) => {
         setHover(false)
       }}
     >
-      {!edit && hover && currentUrls.length > 1 && <EditButton onClick={() => handleEdit()}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z"/>
-          </svg>
-          Change Preview</EditButton>}
+      {/* {true && currentUrls.length > 1 &&  */}
+      {!edit && hover &&
+          <ButtonsContainer>
+            <HoverBtn label='Change Preview' Icon={ChangeIcon} onClick={handleEdit} />
+            <HoverBtn label='Remove All' Icon={TrashIcon} onClick={handleRemoveAll} />
+          </ButtonsContainer>
+          }
       {!edit && newUrl && <LP url={newUrl} fetcher={customFetcher} />}
       {edit && (
         <div>

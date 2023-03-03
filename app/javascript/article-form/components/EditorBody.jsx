@@ -2,8 +2,6 @@ import { h } from 'preact';
 import PropTypes from 'prop-types';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { LinkPreview } from './LinkPreview/LinkPreview';
-import { LinkPreview as LP } from '@dhaiwat10/react-link-preview';
-import parser from 'html-metadata-parser';
 import { ImageGrid } from './ImageGrid/ImageGrid';
 import { Toolbar } from './Toolbar';
 import { handleImagePasted } from './pasteImageHelpers';
