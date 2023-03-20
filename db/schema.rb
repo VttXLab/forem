@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
+ActiveRecord::Schema[7.0].define(version: 2023_03_17_161400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_stat_statements"
@@ -99,6 +99,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "crossposted_at", precision: nil
     t.string "description"
+    t.text "description_html"
     t.datetime "edited_at", precision: nil
     t.boolean "email_digest_eligible", default: true
     t.float "experience_level_rating", default: 5.0
@@ -106,11 +107,13 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
     t.boolean "featured", default: false
     t.string "feed_source_url"
     t.integer "hotness_score", default: 0
+    t.text "image_list"
     t.datetime "last_comment_at", precision: nil, default: "2017-01-01 05:00:00"
     t.datetime "last_experience_level_rating_at", precision: nil
     t.string "main_image"
     t.string "main_image_background_hex_color", default: "#dddddd"
     t.boolean "main_image_from_frontmatter", default: false
+    t.boolean "nsfw", default: false
     t.integer "nth_published_by_author", default: 0
     t.integer "organic_page_views_count", default: 0
     t.integer "organic_page_views_past_month_count", default: 0
@@ -121,14 +124,17 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
     t.string "password"
     t.string "path"
     t.integer "positive_reactions_count", default: 0, null: false
+    t.text "preview_link"
     t.integer "previous_positive_reactions_count", default: 0
     t.integer "previous_public_reactions_count", default: 0, null: false
     t.integer "privileged_users_reaction_points_sum", default: 0
     t.text "processed_html"
+    t.text "processed_preview_link"
     t.integer "public_reactions_count", default: 0, null: false
     t.boolean "published", default: false
     t.datetime "published_at", precision: nil
     t.boolean "published_from_feed", default: false
+    t.boolean "quick_share", default: false
     t.integer "rating_votes_count", default: 0, null: false
     t.integer "reactions_count", default: 0, null: false
     t.tsvector "reading_list_document"
@@ -151,12 +157,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
     t.string "video_source_url"
     t.string "video_state"
     t.string "video_thumbnail_url"
-    t.text "image_list"
-    t.boolean "quick_share", default: false
-    t.text "preview_link"
-    t.text "processed_preview_link"
-    t.text "description_html"
-    t.boolean "nsfw", default: false
     t.index "user_id, title, digest(body_markdown, 'sha512'::text)", name: "index_articles_on_user_id_and_title_and_digest_body_markdown", unique: true
     t.index ["cached_tag_list"], name: "index_articles_on_cached_tag_list", opclass: :gin_trgm_ops, using: :gin
     t.index ["canonical_url"], name: "index_articles_on_canonical_url", unique: true, where: "(published IS TRUE)"
@@ -465,6 +465,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
     t.string "cached_tag_list"
     t.integer "clicks_count", default: 0
     t.datetime "created_at", precision: nil, null: false
+    t.integer "creator_id"
     t.integer "display_to", default: 0, null: false
     t.integer "impressions_count", default: 0
     t.string "name"
@@ -473,9 +474,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
     t.text "processed_html"
     t.boolean "published", default: false
     t.float "success_rate", default: 0.0
-    t.datetime "updated_at", precision: nil, null: false
     t.integer "type_of", default: 0, null: false
-    t.integer "creator_id"
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["cached_tag_list"], name: "index_display_ads_on_cached_tag_list", opclass: :gin_trgm_ops, using: :gin
   end
 
@@ -1279,17 +1279,17 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_171356) do
 
   create_table "users_notification_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.boolean "email_badge_notifications", default: true, null: false
-    t.boolean "email_comment_notifications", default: true, null: false
+    t.boolean "email_badge_notifications", default: false, null: false
+    t.boolean "email_comment_notifications", default: false, null: false
     t.boolean "email_community_mod_newsletter", default: false, null: false
     t.boolean "email_connect_messages", default: true, null: false
     t.boolean "email_digest_periodic", default: false, null: false
-    t.boolean "email_follower_notifications", default: true, null: false
+    t.boolean "email_follower_notifications", default: false, null: false
     t.boolean "email_membership_newsletter", default: false, null: false
-    t.boolean "email_mention_notifications", default: true, null: false
+    t.boolean "email_mention_notifications", default: false, null: false
     t.boolean "email_newsletter", default: false, null: false
     t.boolean "email_tag_mod_newsletter", default: false, null: false
-    t.boolean "email_unread_notifications", default: true, null: false
+    t.boolean "email_unread_notifications", default: false, null: false
     t.boolean "mobile_comment_notifications", default: true, null: false
     t.boolean "mobile_mention_notifications", default: true, null: false
     t.boolean "mod_roundrobin_notifications", default: true, null: false
