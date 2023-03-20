@@ -1454,6 +1454,16 @@
     react-responsive-modal "^6.0.1"
     styled-components "^5.2.3"
 
+"@cordelia273/react-image-grid@https://github.com/VttXLab/facebook-image-grid":
+  version "1.0.0"
+  resolved "https://github.com/VttXLab/facebook-image-grid#6faa38551aca87770fdc5015691af96767667277"
+  dependencies:
+    core-js "3"
+    prop-types "^15.7.2"
+    react-image-gallery "^1.0.9"
+    react-responsive-modal "^6.0.1"
+    styled-components "^5.2.3"
+
 "@csstools/convert-colors@^1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@csstools/convert-colors/-/convert-colors-1.4.0.tgz#ad495dc41b12e75d588c6db8b9834f08fa131eb7"
