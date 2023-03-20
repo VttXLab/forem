@@ -20,6 +20,18 @@
   padding: var(--su-2) 0;
 }
 
+.crayons-story__body .photo-grid-one {
+  max-height: 500px;
+  text-align: center;
+  background: #ccc;
+}
+
+.crayons-story__body .photo-grid-one img {
+  max-height: 500px;
+  width: unset !important;
+  max-width: 100% !important;
+}
+
 .profile-comment-row .text-truncate {
   max-height: 50px;
 }

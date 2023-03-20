@@ -26,7 +26,7 @@ function loadForm() {
 
       if (images!= "") {
         render(
-          <div style={{ maxWidth: 800, margin: "auto" }}>
+        <div class={imagesArr.length ==  1 ? 'photo-grid-one' : ''} style={{ maxWidth: 800, margin: "auto" }}>
           <ReactImageGrid
             images={imagesArr}
             modal={false}

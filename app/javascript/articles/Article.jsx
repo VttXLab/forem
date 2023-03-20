@@ -158,13 +158,15 @@ export const Article = ({
                 data-images={article.image_list}
                 data-loaded="true"
               >
-                <ReactImageGrid
-                  images={article.image_list}
-                  modal={false}
-                  onClick={() => {
-                    window.location.href = article.path;
-                  }}
-                />
+                <div class={article.image_list.length ==  1 ? 'photo-grid-one' : ''} style={{ maxWidth: 800, margin: "auto" }}>
+                  <ReactImageGrid
+                    images={article.image_list}
+                    modal={false}
+                    onClick={() => {
+                      window.location.href = article.path;
+                    }}
+                  />
+                </div>
               </div>
             )}
 
