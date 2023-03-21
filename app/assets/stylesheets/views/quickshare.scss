@@ -13,11 +13,16 @@
 .crayons-article__body .text-truncate,
 .crayons-story__body .text-truncate,
 .crayons-link--contentful .text-truncate,
-.profile-comment-row .text-truncate {
+.profile-comment-row .text-truncate,
+#bottom-content-read-next .text-truncate {
   -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
   mask-image: linear-gradient(180deg, #000 60%, transparent);
   max-height: 200px;
   padding: var(--su-2) 0;
+}
+
+.text-truncate-60 {
+  max-height: 60px !important;
 }
 
 .crayons-story__body .photo-grid-one {

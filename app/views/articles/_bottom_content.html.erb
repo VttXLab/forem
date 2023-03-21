@@ -14,11 +14,11 @@
           <div style="width: 100%">
             <h3 class="fs-xl mb-0 lh-tight">
             <% if !article.quick_share %>
-            <div class="text-truncate">
+            <div class="text-truncate text-truncate-60" title="<%= article.title %>">
               <%= article.title %>
             </div>
             <% elsif article.description != '' %>
-            <div class="text-truncate">
+            <div class="text-truncate text-truncate-60" title="<%= article.description %>">
               <%= article.description %>
             </div>
             <% elsif article.image_list != '' %>
