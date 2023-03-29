@@ -14,13 +14,14 @@
           <div style="width: 100%">
             <h3 class="fs-xl mb-0 lh-tight">
             <% if !article.quick_share %>
-            <div class="text-truncate text-truncate-60" title="<%= article.title %>">
+            <div title="<%= article.title %>">
               <%= article.title %>
             </div>
             <% elsif article.description != '' %>
-            <div class="text-truncate text-truncate-60" title="<%= article.description %>">
-              <%= article.description %>
-            </div>
+            <blockquote title="<%= article.description %>">
+              <%#= article.description[0..160].gsub(/\s\w+\s*$/,'...') %>
+              <%= truncate article.description, length: 160, separator: /\w+/ %>
+            </blockquote>
             <% elsif article.image_list != '' %>
             <div class="crayons-article__cover m-0 mb-1">
               <img src="<%= article.image_list.split(',')[0] %>" width="1000" height="420" class="crayons-article__cover__image<%= article.nsfw ? ' nsfw-content' : '' %>" style="background-color: #eee" />
