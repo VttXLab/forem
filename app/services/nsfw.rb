@@ -1,9 +1,9 @@
 require "nsfw"
 
 module Nsfw
-  SAFETY_THRESHOLD = 0.4
-  PORN_THRESHOLD = 0.65
-  HENTAI_THRESHOLD = 0.6 
+  SAFETY_THRESHOLD = 0.3
+  PORN_THRESHOLD = 0.5
+  HENTAI_THRESHOLD = 0.5 
 
   class NsfwEroticError < StandardError
     def initialize(msg="Erotic content")
